@@ -1,0 +1,10 @@
+{
+  "name": "@yoinktube/contract",
+  "version": "1.0.0",
+  "description": "shared stuff for server and client",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc --build"
+  }
+}

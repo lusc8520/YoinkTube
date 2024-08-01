@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.db"
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  password  String
+  role      String     @default("USER")
+  playlists Playlist[]
+  favorites Favorite[]
+  reactions Reaction[]
+  comments  Comment[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model Playlist {
+  id            Int        @id @default(autoincrement())
+  title         String
+  userId        Int
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos        Video[]
+  favorites     Favorite[]
+  reactions     Reaction[]
+  comments      Comment[]
+  likesCount    Int        @default(0)
+  dislikesCount Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("playlists")
+}
+
+model Video {
+  id             Int      @id @default(autoincrement())
+  title          String
+  youtubeVideoId String
+  playlistId     Int
+  playlist       Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("videos")
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistId Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  @@unique([userId, playlistId])
+  @@map("favorites")
+}
+
+model Reaction {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistId Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  status     String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, playlistId])
+  @@map("reactions")
+}
+
+model Comment {
+  id         Int       @id @default(autoincrement())
+  text       String
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistId Int?
+  playlist   Playlist? @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  parentId   Int?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[] @relation("CommentReplies")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("comments")
+}
