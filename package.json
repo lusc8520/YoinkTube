@@ -4,7 +4,8 @@
   "scripts": {
     "serve:contract-and-client": "npm run build --workspace=contract && npm run build --workspace=client",
     "serve:server": "npm run generate --workspace=server && npm run migrate --workspace=server",
-    "serve": "npm run serve:contract-and-client && npm run serve:server"
+    "serve": "npm run serve:contract-and-client && npm run serve:server",
+    "serve-and-run":  "npm run serve && npm run dev --workspace=server"
   },
   "workspaces": [
     "./client",
