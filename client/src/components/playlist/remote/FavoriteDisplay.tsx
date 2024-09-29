@@ -2,19 +2,17 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import {IconButton} from "@mui/material"
 import {red} from "@mui/material/colors"
-import {Style} from "../../../types/PlaylistData.ts";
-import {usePlaylistContext} from "../../../context/PlaylistProvider.tsx";
+import {RemotePlaylist, Style} from "../../../types/PlaylistData.ts";
 import {useAddFavorite, useCheckFavorite, useRemoveFavorite} from "../../../hooks/playlist/Favorites.ts";
 
-export function FavoriteDisplay() {
+export function FavoriteDisplay({playlist} : {playlist: RemotePlaylist}) {
 
-    const {playlist} = usePlaylistContext()
     const {data:isFavorite, isFetching} = useCheckFavorite(playlist.id)
 
     const {mutate: addFavorite, isPending: addPending} = useAddFavorite()
     const {mutate: removeFavorite, isPending: removePending} = useRemoveFavorite()
 
-    if (isFavorite === undefined) return null
+    //if (isFavorite === undefined) return null
 
     const toggle = () => {
         if (isFetching || addPending || removePending) return
@@ -43,9 +41,9 @@ export function FavoriteDisplay() {
 const wrapperStyle: Style = {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#272727",
+    backgroundColor: "primary.main",
     ":hover": {
-        backgroundColor: "#3f3f3f",
+        backgroundColor: "primary.light",
     }
 
 }

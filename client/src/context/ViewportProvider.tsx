@@ -1,4 +1,5 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {useTimer} from "../hooks/Timer.ts";
 
 type ViewportContextData = {
     width: number
@@ -26,6 +27,11 @@ export function ViewportProvider({children}: Props) {
         setViewportWidth(window.innerWidth)
         setMode(viewportWidth > modeChangeBorder? "horizontal" : "vertical")
     }
+
+    useTimer(300, () => {
+        setViewportWidth(window.innerWidth)
+        setMode(viewportWidth > modeChangeBorder? "horizontal" : "vertical")
+    })
 
     return (
         <ViewportContext.Provider value={{width: viewportWidth, viewMode: mode}}>

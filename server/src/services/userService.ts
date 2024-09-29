@@ -3,15 +3,17 @@ import {compareSync, hashSync} from 'bcrypt'
 import {User} from '@prisma/client'
 import {LoginRequest, LoginSuccess, SignupRequest, UserDto, UpdateUserRequest, validateSignup, validateUserUpdate} from "@yoinktube/contract"
 import * as jwt from "jsonwebtoken"
-import {JWT_SECRET} from "../env"
-
+import {JWT_SECRET} from "../env/env"
+import {UserRole} from "@yoinktube/contract/build/dtos/user";
 
 
 export function userToDto(userDao: User): UserDto {
     return {
         id: userDao.id,
         username: userDao.name,
-        role : userDao.role
+        role : userDao.role,
+        playlistCount : userDao.playlistCount,
+        videoCount : userDao.videoCount,
     }
 }
 
@@ -66,12 +68,10 @@ export const loginService = async (loginRequest: LoginRequest): Promise<[LoginSu
 }
 
 export const updateUserService = async (request: UpdateUserRequest): Promise<[UserDto | string, number]> => {
-
     const error = validateUserUpdate(request)
     if (error !== null) return [error, 400]
 
     const {id, name, password} = request
-
     const updatedUser = await prismaClient.user.update({
         where: { id: id },
         data: {
@@ -90,7 +90,6 @@ export const deleteUserService = async (id: number): Promise<void> => {
     })
 }
 
-
 function createLoginSuccess(user: User): [LoginSuccess, number] {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {expiresIn: "1h"});
     return [{
@@ -99,13 +98,11 @@ function createLoginSuccess(user: User): [LoginSuccess, number] {
     }, 200]
 }
 
-
 export const listUsersService = async (): Promise<[UserDto[], number]> => {
     const users = await prismaClient.user.findMany({
     })
     return [users.map(userToDto), 200]
 }
-
 
 export const getUserByIdService = async (id: number): Promise<[UserDto | string, number]> => {
     const user = await prismaClient.user.findFirst({
@@ -119,11 +116,30 @@ export const getUserByIdService = async (id: number): Promise<[UserDto | string,
     return [userToDto(user), 200]
 }
 
+export const changeUserRoleService = async (currentUser: User, targetUserId: number, newRole: UserRole): Promise<[UserDto | string, number]> => {
+    const targetUser = await prismaClient.user.findUnique({ where: { id: targetUserId } });
 
-export const changeUserRoleService = async (id: number, role: string): Promise<[UserDto, number]> => {
-    const updatedUser = await prismaClient.user.update({
-        where: {id},
-        data: {role},
-    })
-    return [userToDto(updatedUser), 200]
+    if (!targetUser) {
+        return ["User not found", 404];
+    }
+
+    if (currentUser.role === 'SUPER_ADMIN') {
+        const updatedUser = await prismaClient.user.update({
+            where: { id: targetUserId },
+            data: { role: newRole },
+        });
+        return [userToDto(updatedUser), 200];
+    } else if (currentUser.role === 'ADMIN') {
+        if (targetUser.role === 'USER' && newRole === 'ADMIN') {
+            const updatedUser = await prismaClient.user.update({
+                where: { id: targetUserId },
+                data: { role: newRole },
+            });
+            return [userToDto(updatedUser), 200];
+        } else {
+            return ["Insufficient permissions to change this user's role", 403];
+        }
+    } else {
+        return ["Insufficient permissions to change user roles", 403];
+    }
 }

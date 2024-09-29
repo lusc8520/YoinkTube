@@ -12,10 +12,20 @@ type RootLayoutProps = {
 }
 
 export function RootLayout({children}: RootLayoutProps) {
+
+    const {viewMode} = useViewport()
+
+    const style: Style = {
+        flexGrow: 1,
+        display: "flex",
+        overflow: "hidden",
+        flexDirection: (viewMode === "horizontal")? "row": "column-reverse"
+    }
+
     return (
         <Box sx={rootStyle}>
             <Header/>
-            <Box sx={middleStyle()}>
+            <Box sx={style}>
                 <MainContent>
                     {children}
                 </MainContent>
@@ -32,14 +42,4 @@ const rootStyle: Style = {
     display: "flex",
     flexDirection: "column",
     boxSizing: "border-box"
-}
-
-const middleStyle = (): Style => {
-    const {viewMode} = useViewport()
-    return {
-        flexGrow: 1,
-        display: "flex",
-        overflow: "hidden",
-        flexDirection: (viewMode === "horizontal")? "row": "column"
-    }
 }

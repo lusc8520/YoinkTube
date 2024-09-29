@@ -27,25 +27,6 @@ export const addCommentService = async (userId: number, playlistId: number, text
     return [commentToDto(newComment), 201];
 }
 
-export const getCommentsByPlaylistService = async (playlistId: number): Promise<[CommentDto[], number]> => {
-    const comments = await prismaClient.comment.findMany({
-        where: { playlistId, parentId: null },
-        include: {
-            user: true,
-            replies: {
-                include: {
-                    user: true,
-                }
-            },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        }
-    })
-
-    return [comments.map(comment => commentToDto(comment)), 200];
-}
-
 export const deleteCommentService = async (commentId: number) => {
     if (commentId === undefined) return 400
 

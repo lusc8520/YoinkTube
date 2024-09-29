@@ -1,10 +1,8 @@
 import {Box, TextField} from "@mui/material"
 import React, {useEffect, useState} from "react"
 import {LoginButton} from "./LoginButton.tsx";
-import {Style} from "../../types/PlaylistData.ts";
-import {red} from "@mui/material/colors";
-import {useSignup} from "../../context/AuthProvider.tsx";
 import {useNavigate} from "react-router-dom";
+import {useSignup} from "../../context/AuthProvider.tsx";
 
 
 export function SignUpTab() {
@@ -13,7 +11,7 @@ export function SignUpTab() {
     const [password2, setPassword2] = useState("")
     const navigate = useNavigate()
 
-    const {mutate: signup, isSuccess} = useSignup()
+    const {mutate: signup, isSuccess, isPending} = useSignup()
 
     useEffect(() => {
         if (isSuccess) navigate("/")
@@ -37,6 +35,16 @@ export function SignUpTab() {
                        label="Username"
                        autoComplete="new-username"
                        variant="outlined"
+                       sx={{
+                           '& .MuiOutlinedInput-root': {
+                               '&.Mui-focused fieldset': {
+                                   borderColor: 'white',
+                               }
+                           },
+                           '& .MuiInputLabel-root.Mui-focused': {
+                               color: 'white',
+                           },
+                       }}
             />
             <TextField value={password1}
                        inputProps={{maxLength: 20}}
@@ -45,6 +53,16 @@ export function SignUpTab() {
                        label="Password"
                        autoComplete="new-password"
                        variant="outlined"
+                       sx={{
+                           '& .MuiOutlinedInput-root': {
+                               '&.Mui-focused fieldset': {
+                                   borderColor: 'white',
+                               }
+                           },
+                           '& .MuiInputLabel-root.Mui-focused': {
+                               color: 'white',
+                           },
+                       }}
             />
             <TextField value={password2}
                        inputProps={{maxLength: 20}}
@@ -53,13 +71,18 @@ export function SignUpTab() {
                        autoComplete="new-password"
                        label="Repeat Password"
                        variant="outlined"
+                       sx={{
+                           '& .MuiOutlinedInput-root': {
+                               '&.Mui-focused fieldset': {
+                                   borderColor: 'white',
+                               }
+                           },
+                           '& .MuiInputLabel-root.Mui-focused': {
+                               color: 'white',
+                           },
+                       }}
             />
-            <LoginButton handleClick={() => sendSignup()}/>
+            <LoginButton handleClick={() => sendSignup()} isLoading={isPending}/>
         </Box>
     )
-}
-
-const errorStyle: Style = {
-    color: red[600],
-    textAlign : "center"
 }

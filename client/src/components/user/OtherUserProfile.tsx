@@ -16,7 +16,9 @@ export function OtherUserProfile({user}: Props) {
                  component="header">
                 <Box sx={userTitleStyle}>
                     <Box sx={usernameStyle}>{user.username}</Box>
-                    <Box sx={userRoleStyle}>role: {user.role}</Box>
+                    <Box sx={userRoleStyle}>Role: {user.role}</Box>
+                    <Box sx={userRoleStyle}>Playlists: {user.playlistCount}</Box>
+                    <Box sx={userRoleStyle}>Videos: {user.videoCount}</Box>
                 </Box>
             </Box>
             <Box sx={tabContentStyle}>
@@ -55,7 +57,8 @@ const userRoleStyle: Style = {
 const headerStyle: Style = {
     display: "flex",
     flexDirection: "column",
-    borderBottom: "#ffffff30 1px solid",
+    borderBottom: "1px solid",
+    borderColor: "divider",
     gap: "0.25rem",
     paddingBottom: "0.5rem"
 }

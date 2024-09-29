@@ -1,35 +1,23 @@
 import YouTube from "react-youtube"
 import React from "react"
-import {usePlayer} from "../../hooks/playlist/PlayerStore.ts"
 import {Alert, Box} from "@mui/material"
-import {useResize} from "../../hooks/general/ResizeHook.ts"
+import {useResize} from "../../hooks/ResizeHook.ts"
 import {useViewport} from "../../context/ViewportProvider.tsx";
 import {Style} from "../../types/PlaylistData.ts";
+import {useOptions} from "../../context/OptionsProvider.tsx";
+import {usePlayer} from "../../context/PlayerProvider.tsx";
 
 export function YouTubePlayer() {
 
     const resize = useResize()
     const {viewMode} = useViewport()
-
-    const currentVideo = usePlayer((state) => state.currentVideo)
-    const pause = usePlayer((state) => state.pause)
-    const play = usePlayer((state) => state.play)
-    const onError = usePlayer((state) => state.onError)
-    const initPlayer = usePlayer((state) => state.initPlayer)
-    const playNext = usePlayer((state) => state.playNext)
+    const {currentVideoId, onError, initPlayer, playNext, onPlay, onPause, onStateChanged, onPlaySpeedChanged, isLoop, seekTo} = usePlayer()
+    const {playerVars} = useOptions()
 
     const opts: YT.PlayerOptions = {
         width: "100%",
         height: "100%",
-        playerVars: {
-            autohide: 1,
-            autoplay: 1,
-            disablekb: 1,
-            rel: 0,
-            controls: 1,
-            showinfo: 0,
-            fs: 0
-        },
+        playerVars : playerVars
     }
 
     const playerStyle: Style = {
@@ -39,41 +27,52 @@ export function YouTubePlayer() {
         flexShrink: 0
     }
 
+    function handleEnd() {
+        if (isLoop) {
+            seekTo(0)
+        } else {
+            playNext()
+        }
+    }
+
     return (
         <Box sx={playerStyle}>
             <Box
+                bgcolor="primary.dark"
+                id="resize"
                 onMouseEnter={resize.mouseEnter}
                 onMouseLeave={resize.mouseLeave}
                 onMouseDown={resize.mouseDown}
                 onMouseUp={resize.mouseUp}
-                sx={{backgroundColor: "#212121", width: (viewMode === "horizontal")? "2rem": "0"}}
+                sx={{width: (viewMode === "horizontal")? "2rem": "0"}}
             />
             {
-                (currentVideo === undefined)?
+                (currentVideoId === undefined)?
                 <Box sx={{
                     flexGrow: 1,
                     display: "flex",
                     justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "black"
+                    alignItems: "center"
                 }}>
-                    <Alert severity="warning">No video selected</Alert>
+                    <Alert variant="outlined" severity="warning">No video selected</Alert>
                 </Box>
                 :
                 <YouTube
-                    videoId={currentVideo.videoId}
-                    onPause={pause}
-                    onPlay={play}
+                    id="yt-player"
+                    videoId={currentVideoId}
+                    onPause={onPause}
+                    onPlay={onPlay}
                     opts={opts}
                     onError={onError}
+                    onPlaybackRateChange={(e) => onPlaySpeedChanged(e.data)}
+                    onStateChange={onStateChanged}
                     onReady={initPlayer}
-                    onEnd={playNext}
+                    onEnd={handleEnd}
                     style={{
                         pointerEvents: resize.isResizing ? "none" : "auto",
                         flexGrow: 1,
                         minWidth: "200px",
-                        minHeight: "200px",
-                        backgroundColor: "black"
+                        minHeight: "200px"
                     }}
                 />
             }

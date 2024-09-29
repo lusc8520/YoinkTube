@@ -1,10 +1,8 @@
 import React, {useEffect, useState} from "react"
 import {Box, TextField} from "@mui/material"
 import {LoginButton} from "./LoginButton.tsx"
-import {Style} from "../../types/PlaylistData.ts"
-import { red } from '@mui/material/colors'
-import {useAuth, useLogin} from "../../context/AuthProvider.tsx"
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom"
+import {useLogin} from "../../context/AuthProvider.tsx"
 
 
 export function LoginTab() {
@@ -12,7 +10,7 @@ export function LoginTab() {
     const [password, setPassword] = useState("")
     const navigate = useNavigate()
 
-    const {mutate: login, isSuccess} = useLogin()
+    const {mutate: login, isSuccess, isPending} = useLogin()
 
     useEffect(() => {
         if (isSuccess) navigate("/")
@@ -32,7 +30,18 @@ export function LoginTab() {
                        value={username}
                        autoComplete="current-username"
                        onChange={e => setUsername(e.target.value)}
-                       variant="outlined">
+                       variant="outlined"
+                       sx={{
+                           '& .MuiOutlinedInput-root': {
+                               '&.Mui-focused fieldset': {
+                                   borderColor: 'white',
+                               }
+                           },
+                           '& .MuiInputLabel-root.Mui-focused': {
+                               color: 'white',
+                           },
+                       }}
+            >
             </TextField>
             <TextField type="password"
                        inputProps={{maxLength: 20}}
@@ -40,14 +49,20 @@ export function LoginTab() {
                        autoComplete="current-password"
                        onChange={e => setPassword(e.target.value)}
                        label="Password"
-                       variant="outlined">
+                       variant="outlined"
+                       sx={{
+                           '& .MuiOutlinedInput-root': {
+                               '&.Mui-focused fieldset': {
+                                   borderColor: 'white',
+                               }
+                           },
+                           '& .MuiInputLabel-root.Mui-focused': {
+                               color: 'white',
+                           },
+                       }}
+            >
             </TextField>
-            <LoginButton handleClick={() => sendLogin()}/>
+            <LoginButton handleClick={() => sendLogin()} isLoading={isPending}/>
         </Box>
     )
-}
-
-const errorStyle: Style = {
-    color: red[600],
-    textAlign : "center"
 }

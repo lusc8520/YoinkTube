@@ -1,52 +1,26 @@
 import {useFetch} from "../../context/FetchProvider.tsx"
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
-import {PlaylistDto, PlaylistReaction} from "@yoinktube/contract"
-import {useAuth} from "../../context/AuthProvider.tsx"
 import {useSnackbar} from "../../context/SnackbarProvider.tsx";
+import {RemotePlaylist} from "../../types/PlaylistData.ts";
+import {useAuth} from "../../context/AuthProvider.tsx";
 
 export function useFavorites() {
     const {fetchData} = useFetch()
-
-    return useQuery({
-        queryKey: ["favorites"],
-        queryFn: () => fetchData<PlaylistDto[]>("/playlists/favorites", "GET"),
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-        staleTime: Infinity,
-        retry: false
-    })
-}
-
-export function useCheckReaction(playlistId: number) {
-    const {fetchData} = useFetch()
     const {user} = useAuth()
 
-    const getReaction = async () => {
-        if (user === undefined) throw null
-        return await fetchData<"like" | "dislike">(`/playlists/reaction/${playlistId}`, "GET")
+    async function fetchFavorites(): Promise<RemotePlaylist[]> {
+        if (user === undefined) return []
+        return fetchData<RemotePlaylist[]>("/playlists/favorites", "GET")
     }
 
     return useQuery({
-        queryKey: ["reaction", playlistId],
-        queryFn: getReaction,
+        queryKey: ["favorites", user],
+        queryFn: () => fetchFavorites(),
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         staleTime: Infinity,
         retry: false
     })
-}
-
-export function usePostReaction(playlistId: number) {
-    // TODO
-    // const {fetchData} = useFetch()
-    //
-    // const post = async (request: PlaylistReaction) => {
-    //     await fetchData(`/playlists/reaction`, "POST", request)
-    // }
-    //
-    // return useMutation({
-    //     mutationFn: post
-    // })
 }
 
 export function useCheckFavorite(playlistId: number) {
@@ -54,16 +28,17 @@ export function useCheckFavorite(playlistId: number) {
     const {user} = useAuth()
 
     const check = async (): Promise<boolean> => {
-        if (user === undefined) throw null
-        return await fetchData<boolean>(`/playlists/favorite/${playlistId}`, "GET")
+        if (user === undefined) return false
+        return fetchData<boolean>(`/playlists/favorite/${playlistId}`, "GET")
     }
 
     return useQuery({
-        queryKey: ["favorite", playlistId],
+        queryKey: ["favorite", playlistId, user],
         queryFn: check,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        staleTime: Infinity
+        staleTime: Infinity,
+        retry : false
     })
 }
 

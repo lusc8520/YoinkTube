@@ -1,7 +1,7 @@
 import {createContext, ReactNode, useContext} from "react";
-import {useToken} from "../hooks/user/JwtTokenHook.ts";
-import {baseUrl} from "../env.ts";
+import {baseUrl} from "../env/env.ts";
 import {useSnackbar} from "./SnackbarProvider.tsx";
+import {useAuth} from "./AuthProvider.tsx";
 
 type FetchContextData = {
     fetchData: <TSuccess>(path: string, method: HttpMethod, requestBody?: any) => Promise<TSuccess>
@@ -14,7 +14,7 @@ type HttpMethod = "GET" | "POST" | "DELETE" | "PUT"
 
 export function FetchProvider({children} : {children: ReactNode}) {
 
-    const {token, setToken} = useToken()
+    const {token, setToken, setUser} = useAuth()
     const {showSnackbar} = useSnackbar()
 
     const fetchData = async <TData,>(path: string, method: HttpMethod, requestBody?: any): Promise<TData> => {
@@ -44,7 +44,8 @@ export function FetchProvider({children} : {children: ReactNode}) {
             setToken(data)
             response = await doFetch()
             if (response.status === 401) {
-                // TODO: unset user object
+                token.current = ""
+                setUser(undefined)
                 showSnackbar("you are not logged in", "info")
                 throw null
             }

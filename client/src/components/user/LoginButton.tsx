@@ -1,17 +1,15 @@
-import {Box, Button, CircularProgress} from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
+import {Box, Button, CircularProgress} from "@mui/material"
+import SendIcon from "@mui/icons-material/Send"
 import React from "react";
-import { indigo } from '@mui/material/colors';
-import {useAuth} from "../../context/AuthProvider.tsx";
+import {indigo} from "@mui/material/colors";
 
 type LoginButtonProps = {
     handleClick: () => void
+    isLoading: boolean
 }
 
 
-export function LoginButton({handleClick}: LoginButtonProps) {
-
-    const {isLoading} = useAuth()
+export function LoginButton({handleClick, isLoading}: LoginButtonProps) {
 
     return (
         <Button

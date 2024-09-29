@@ -1,29 +1,37 @@
-import {Box, IconButton, Input} from "@mui/material"
-import CheckIcon from "@mui/icons-material/Check"
-import CloseIcon from "@mui/icons-material/Close"
+import {Box, Button, Input, TextField} from "@mui/material"
 import React, {useEffect, useState} from "react"
-import {usePlaylistContext} from "../../../context/PlaylistProvider.tsx"
 import {useAddVideo} from "../../../hooks/playlist/RemotePlaylists.ts"
+import {RemotePlaylist} from "../../../types/PlaylistData.ts"
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
 
 type Props = {
-    onCancel: () => void
+    onCancel?: () => void
+    playlist: RemotePlaylist
+    onSuccess?: () => void
 }
 
-export function AddVideoDialog({onCancel} : Props) {
+export function AddVideoDialog({onCancel, onSuccess, playlist} : Props) {
 
     const [name, setName] = useState("")
     const [videoId, setVideoId] = useState("")
 
-    const {playlist} = usePlaylistContext()
+    const {mutate: addVideo, isSuccess} = useAddVideo(v => {
 
-    const {mutate: addVideo, isSuccess} = useAddVideo()
+        const newPlaylist: RemotePlaylist = {
+            ...playlist,
+            videos: [...playlist.videos, v]
+        }
+        addVideo2(newPlaylist, v)
+    })
+    const {addVideo: addVideo2} = usePlayer()
 
     useEffect(() => {
         if (isSuccess) {
             setName("")
             setVideoId("")
+            onSuccess?.()
         }
-    }, [isSuccess]);
+    }, [isSuccess])
 
     function confirm() {
         addVideo({
@@ -34,9 +42,8 @@ export function AddVideoDialog({onCancel} : Props) {
     }
 
     return (
-        <Box
-            sx={{ display: "flex", gap: "1rem" }}>
-            <Input
+        <Box display="flex" gap="1rem" flexDirection="column">
+            <TextField
                 value={videoId}
                 placeholder="Youtube Link..."
                 onChange={event => setVideoId(event.target.value)}
@@ -46,9 +53,9 @@ export function AddVideoDialog({onCancel} : Props) {
                     }
                 }}
             />
-            <Input
+            <TextField
                 value={name}
-                placeholder="Name..."
+                placeholder="Name... (Optional)"
                 onChange={event => setName(event.target.value)}
                 onKeyDown={event => {
                     if (event.key === "Enter") {
@@ -56,21 +63,28 @@ export function AddVideoDialog({onCancel} : Props) {
                     }
                 }}
             />
-            <IconButton
-                color="success"
-                onClick={_ => confirm()}>
-                <CheckIcon/>
-            </IconButton>
-
-            <IconButton
-                onClick={_ => {
-                    onCancel()
-                    setName("")
-                    setVideoId("")
-                }}
-                color="error">
-                <CloseIcon/>
-            </IconButton>
+            <Box display="flex" justifyContent="center" gap="0.5rem">
+                <Button
+                    sx={{textTransform: "none"}}
+                    color="success"
+                    variant="acceptButton"
+                    onClick={confirm}>
+                    Add
+                </Button>
+                <Button
+                    sx={{textTransform: "none"}}
+                    color="error"
+                    variant="cancelButton"
+                    onClick={_ => {
+                        onCancel?.()
+                        setName("")
+                        setVideoId("")
+                    }}>
+                    Cancel
+                </Button>
+            </Box>
         </Box>
     )
 }
+
+

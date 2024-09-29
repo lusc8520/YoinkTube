@@ -1,23 +1,25 @@
-import {Box} from "@mui/material"
-import React from "react"
-import {usePlaylists} from "../../../hooks/playlist/RemotePlaylists.ts"
-import {CreatePlaylistDialog} from "./CreatePlaylistDialog.tsx"
-import {PlaylistItem} from "./PlaylistItem.tsx"
+import { Box } from "@mui/material";
+import { usePlaylists } from "../../../hooks/playlist/RemotePlaylists.ts";
+import { CreatePlaylistButton } from "./CreatePlaylistButton.tsx";
+import { ImportButton } from "./ImportButton.tsx";
+import { PlaylistItem } from "./PlaylistItem.tsx";
+import { useLayout } from "../../../context/LayoutProvider.tsx";
 
 export function PlaylistGrid() {
-
-    const {data: playlists, isFetching} = usePlaylists()
-    if (playlists === undefined || isFetching) return <Box>Loading...</Box>
+    const { data: playlists, isFetching } = usePlaylists()
+    const {gridContainerStyle} = useLayout()
+    if (playlists === undefined || isFetching) return null
 
     return (
-        <Box sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
-        }}>
-            <CreatePlaylistDialog/>
-            <Box sx={{display: "flex", flexWrap: "wrap",  gap: "1rem"}}>
-                { playlists.map(playlist => <PlaylistItem key={playlist.id} playlist={playlist}/>) }
+        <Box display="flex" flexDirection="column" gap="0.75rem">
+            <Box display="flex" gap="0.75rem">
+                <CreatePlaylistButton />
+                <ImportButton/>
+            </Box>
+            <Box sx={gridContainerStyle}>
+                {
+                    playlists.map(playlist => <PlaylistItem key={playlist.id} playlist={playlist}/>)
+                }
             </Box>
         </Box>
     )

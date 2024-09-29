@@ -5,22 +5,25 @@ import AddIcon from "@mui/icons-material/Add"
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever"
 import React, {useRef, useState} from "react"
-import {Style} from "../../../types/PlaylistData.ts"
-import {AddVideoDialog} from "./AddVideoDialog.tsx"
-import {DeletePlaylistDialog} from "./DeletePlaylistDialog.tsx"
-import {EditPlaylistDialog} from "./EditPlaylistDialog.tsx"
+import {RemotePlaylist, Style} from "../../../types/PlaylistData.ts"
+import {useMakeLocalCopy} from "../../../hooks/playlist/LocalPlaylists.ts"
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
+import {useDialog} from "../../../context/DialogProvider.tsx";
+import {AddVideoDialog} from "./AddVideoDialog.tsx";
+import {EditPlaylistDialog} from "./EditPlaylistDialog.tsx";
+import {DeletePlaylistDialog} from "./DeletePlaylistDialog.tsx";
 
-type Props = {
-    setDialog :  React.Dispatch<React.SetStateAction<React.ReactNode>>
-}
 
-export function PlaylistDetailsMenu({setDialog} : Props) {
+export function PlaylistDetailsMenu({playlist}: {playlist: RemotePlaylist}) {
     const anchor = useRef<null | SVGSVGElement>(null)
-    const [isOpen, setOpen] = useState(false);
+    const [isOpen, setOpen] = useState(false)
+
+    const {showDialog, hideDialog} = useDialog()
+    const {mutate: createLocalCopy} = useMakeLocalCopy()
+    //if (playlist.owner?.id !== user?.id) return null
 
     const handleToggle = () => {
         setOpen(!isOpen)
-        setDialog(null)
     }
 
     const close = () => {
@@ -34,7 +37,10 @@ export function PlaylistDetailsMenu({setDialog} : Props) {
                 <MenuItem
                     onClick={() => {
                         setOpen(false)
-                        setDialog(<AddVideoDialog onCancel={() => setDialog(null)}/>)
+                        showDialog({
+                            title: "Add Video",
+                            node: <AddVideoDialog playlist={playlist} onCancel={hideDialog}/>
+                        })
                     }}
                     sx={menuItemStyle}>
                     <AddIcon/>
@@ -43,7 +49,10 @@ export function PlaylistDetailsMenu({setDialog} : Props) {
                 <MenuItem
                     onClick={() => {
                         setOpen(false)
-                        setDialog(<EditPlaylistDialog onCancel={() => setDialog(null)}/>)
+                        showDialog({
+                            title: "Edit Playlist",
+                            node: <EditPlaylistDialog onCancel={hideDialog} onSuccess={hideDialog} playlist={playlist}/>
+                        })
                     }}
                     sx={menuItemStyle}>
                     <EditIcon/>Edit Playlist
@@ -51,10 +60,21 @@ export function PlaylistDetailsMenu({setDialog} : Props) {
                 <MenuItem
                     onClick={_=> {
                         setOpen(false)
-                        setDialog(<DeletePlaylistDialog onCancel={() => setDialog(null)}/>)
+                        showDialog({
+                            title: "Delete Playlist",
+                            node: <DeletePlaylistDialog playlist={playlist} onCancel={hideDialog} onSuccess={hideDialog}/>
+                        })
                     }}
                     sx={menuItemStyle}>
                     <DeleteForeverIcon/>Delete Playlist
+                </MenuItem>
+                <MenuItem
+                    onClick={_=> {
+                        setOpen(false)
+                        createLocalCopy(playlist)
+                    }}
+                    sx={menuItemStyle}>
+                    <ContentCopyRoundedIcon/>Create Local Copy
                 </MenuItem>
             </PopperMenu>
         </>
@@ -64,7 +84,7 @@ export function PlaylistDetailsMenu({setDialog} : Props) {
 const menuIconStyle: Style = {
     color : "grey",
     ":hover": {
-        color: "white"
+        color: "text.primary"
     },
     cursor: "pointer",
     transition: "0.25s",
@@ -78,6 +98,6 @@ const menuItemStyle: Style = {
     gap: "0.5rem",
     borderRadius: "5px",
     ":hover": {
-        background: "#535353"
+        background: "primary.dark"
     }
 }

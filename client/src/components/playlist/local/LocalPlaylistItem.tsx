@@ -1,74 +1,118 @@
-import {PlaylistDto} from "@yoinktube/contract";
-import {ReactNode} from "react";
 import {useNavigate} from "react-router-dom";
-import {Box} from "@mui/material";
+import {Box, Tooltip} from "@mui/material";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import {Style} from "../../../types/PlaylistData.ts";
-import {green} from "@mui/material/colors";
+import {LocalPlaylist, Style} from "../../../types/PlaylistData.ts";
 import {LocalVideoItem} from "./LocalVideoItem.tsx";
-import {usePlayer} from "../../../hooks/playlist/PlayerStore.ts";
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
+import {useLayout} from "../../../context/LayoutProvider.tsx";
+import AddToQueueRoundedIcon from '@mui/icons-material/AddToQueueRounded';
+import RemoveFromQueueRoundedIcon from '@mui/icons-material/RemoveFromQueueRounded';
+import {LocalPlaylistDetailsMenu} from "./LocalPlaylistDetailsMenu.tsx";
+import {useWatchTogether} from "../../../context/WatchTogetherProvider.tsx";
+import {useSnackbar} from "../../../context/SnackbarProvider.tsx";
+import {green} from "@mui/material/colors";
 
 type PlaylistItemProps = {
-    playlist: PlaylistDto
+    playlist: LocalPlaylist
 }
 
 export function LocalPlaylistItem({playlist}: PlaylistItemProps) {
     const navigate = useNavigate()
+    const {itemsContainerStyle, playlistItemStyle} = useLayout()
+    const {playPlaylist, queuePlaylist, isQueued, dequeuePlaylist} = usePlayer()
+    const {isAllowed} = useWatchTogether()
+    const {showSnackbar} = useSnackbar()
 
-    const playPlaylist = usePlayer((state) => state.playPlaylist)
+
     return (
         <Box
             id="playlist-item"
-            sx={mainBoxStyle}>
+            sx={playlistItemStyle}>
             <Box
                 component="header"
-                sx={headerStyle}>
+                sx={playlistItemHeaderStyle}>
                 <Box
                     onClick={() => {
+                        if (!isAllowed) {
+                            showSnackbar("you are not the lobby owner", "error")
+                            return
+                        }
                         playPlaylist(playlist)
                     }}
                     id="play-button"
                     sx={playButtonStyle}>
                     <PlayCircleIcon sx={playIconStyle}/>
                 </Box>
-                <Box
-                    id="playlist-title"
-                    onClick={_ => {navigate(`/localPlaylist/${playlist.id}`)}}
-                    sx={playlistNameContainerStyle}>
+                {
+                    isQueued(playlist)?
+                        <Box
+                            onClick={() => {
+                                dequeuePlaylist(playlist)
+                            }}
+                            id="play-button"
+                            sx={playButtonStyle}>
+                            <RemoveFromQueueRoundedIcon sx={dequeueIconStyle}/>
+                        </Box>
+                        :
+                        <Box
+                            onClick={() => {
+                                if (!isAllowed) {
+                                    showSnackbar("you are not the lobby owner", "error")
+                                    return
+                                }
+                                queuePlaylist(playlist)
+                            }}
+                            id="play-button"
+                            sx={playButtonStyle}>
+                            <AddToQueueRoundedIcon sx={enqueueIconStyle}/>
+                        </Box>
+                }
+                <Tooltip title={playlist.name} placement="top" arrow enterDelay={500} leaveDelay={200}
+                         componentsProps={{
+                             tooltip: {
+                                 sx: {
+                                     bgcolor: 'primary.main',
+                                     '& .MuiTooltip-arrow': {
+                                         color: 'primary.main',
+                                     },
+                                 },
+                             },
+                         }}>
                     <Box
-                        sx={playlistNameStyle}>
-                        {playlist.name}
+                        id="playlist-title"
+                        onClick={_ => {navigate(`/localPlaylist/${playlist.id}`)}}
+                        sx={playlistNameContainerStyle}>
+                        <Box
+                            sx={playlistNameStyle}>
+                            {playlist.name}
+                        </Box>
                     </Box>
+                </Tooltip>
+                <Box sx={{...playButtonStyle, paddingX: "0"}}>
+                    <LocalPlaylistDetailsMenu playlist={playlist}/>
                 </Box>
             </Box>
-            {
-                playlist.videos.map((video, index) =>
-                <LocalVideoItem index={index} playlist={playlist} key={video.id} video={video}/>)
-            }
+
+            <Box sx={itemsContainerStyle}>
+                {
+                    playlist.videos.map((video, index) =>
+                        <LocalVideoItem index={index} playlist={playlist} key={video.id} video={video}/>)
+                }
+            </Box>
+
         </Box>
     )
 }
 
-
-const mainBoxStyle: Style = {
-    width: "300px",
-    height: "500px",
-    borderRadius: "12px",
-    border: "#ffffff30 1px solid",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-}
-
-const headerStyle: Style = {
-    backgroundColor: "#212121",
+export const playlistItemHeaderStyle: Style = {
+    backgroundColor: "primary.main",
     fontSize: "20px",
     display: "flex"
 }
 
-const playButtonStyle: Style = {
+export const playButtonStyle: Style = {
     "&:hover": {
-        backgroundColor : "#3f3f3f"
+        backgroundColor : "primary.light"
     },
     cursor: "pointer",
     display: "flex",
@@ -77,11 +121,25 @@ const playButtonStyle: Style = {
     transition: "0.2s",
 }
 
-const playIconStyle: Style = {
-    color: green["A700"]
+export const playIconStyle: Style = {
+    color: green[500]
 }
 
-const playlistNameContainerStyle: Style = {
+export const enqueueIconStyle: Style = {
+    color: "info.dark",
+    ":hover" : {
+        color: "info.main",
+    }
+}
+
+export const dequeueIconStyle: Style = {
+    color: "error.dark",
+    ":hover" : {
+        color: "error.main",
+    }
+}
+
+export const playlistNameContainerStyle: Style = {
     overflow: "hidden",
     paddingX: "0.5rem",
     paddingY: "0.1rem",
@@ -91,7 +149,7 @@ const playlistNameContainerStyle: Style = {
     display: "flex",
     alignItems: "center",
     "&:hover": {
-        backgroundColor: "#3f3f3f"
+        backgroundColor : "primary.light"
     }
 }
 

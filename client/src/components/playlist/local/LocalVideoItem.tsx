@@ -1,29 +1,37 @@
-import {PlaylistDto, VideoDto} from "@yoinktube/contract";
+import {VideoDto} from "@yoinktube/contract";
 import {Box} from "@mui/material";
 import React from "react";
-import {Style} from "../../../types/PlaylistData.ts";
-import {usePlayer} from "../../../hooks/playlist/PlayerStore.ts";
+import {LocalPlaylist, Playlist, Style} from "../../../types/PlaylistData.ts";
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
+import {LayoutType, useLayout} from "../../../context/LayoutProvider.tsx";
+import {useWatchTogether} from "../../../context/WatchTogetherProvider.tsx";
+import {useSnackbar} from "../../../context/SnackbarProvider.tsx";
 
 type Props = {
     video: VideoDto
-    playlist: PlaylistDto
+    playlist: LocalPlaylist
     index: number
 }
 
 export function LocalVideoItem({video, playlist, index} : Props) {
+   const {playPlaylist, currentVideo, currentPlaylist} = usePlayer()
+    const isCurrent = Playlist.equals(currentPlaylist, playlist) && currentVideo?.id === video.id
+    const {videoItemStyle, layoutType} = useLayout()
+    const {isAllowed} = useWatchTogether()
+    const {showSnackbar} = useSnackbar()
 
-    const currentVideo = usePlayer((state) => state.currentVideo)
-    const playPlaylist = usePlayer((state) => state.playPlaylist)
 
     return (
         <Box
             onClick={() => {
+                if (!isAllowed) {
+                    showSnackbar("you are not the lobby owner", "error")
+                    return
+                }
                 playPlaylist(playlist, index)
             }}
-            id="video-item"
-            sx={videoItemStyle(currentVideo?.id === video.id)}>
+            sx={videoItemStyle(isCurrent)}>
             <Box
-                id="thumbnail-container"
                 sx={thumbnailContainerStyle}>
                 <Box
                     sx={thumbnailStyle}
@@ -31,37 +39,33 @@ export function LocalVideoItem({video, playlist, index} : Props) {
                     src={`https://img.youtube.com/vi/${video.videoId}/sddefault.jpg`}
                 />
             </Box>
-
             <Box
-                id="video-title">
+                sx={videoNameStyle(layoutType)}>
                 {video.name}
             </Box>
-            <Box id="spacing" sx={{flexGrow: 1}}/>
         </Box>
     )
 }
 
-const videoItemStyle = (isCurrent: boolean): Style => ({
-    display: "flex",
-    alignItems: "center",
-    padding: "0.25rem",
-    gap: "0.25rem",
-    transition: "0.1s",
-    ":hover": {
-        backgroundColor : "#272727"
-    },
-    cursor: "pointer",
-    backgroundColor: isCurrent? "#112531": ""
+export const videoNameStyle = (layoutType: LayoutType): Style => ({
+    textWrap: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    width: (layoutType === "list")? "120px" : "inherit",
+    textAlign: "center"
 })
 
-const thumbnailContainerStyle: Style = {
+export const thumbnailContainerStyle: Style = {
     width: "120px",
-    height: "70px"
+    height: "70px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
 }
 
-const thumbnailStyle: Style = {
-    width: "100%",
-    height: "100%",
+export const thumbnailStyle: Style = {
+    width: "120px",
+    height: "70px",
     objectFit: "cover",
     borderRadius: "5px",
 }

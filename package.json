@@ -2,9 +2,8 @@
   "name": "yoinktube",
   "description": "root project",
   "scripts": {
-    "serve:contract-and-client": "tsx preServe.ts && npm run build --workspace=contract && npm run build --workspace=client",
-    "serve:server" : "npm run generate --workspace=server && npm run migrate --workspace=server && npm run dev --workspace=server",
-
+    "serve:contract-and-client": "npm run build --workspace=contract && npm run build --workspace=client",
+    "serve:server": "npm run generate --workspace=server && npm run migrate --workspace=server",
     "serve": "npm run serve:contract-and-client && npm run serve:server"
   },
   "workspaces": [
@@ -17,3 +16,4 @@
     "typescript": "^5.4.5"
   }
 }
+

@@ -1,18 +1,22 @@
 import React, {createContext, ReactNode, useContext, useState} from "react"
-import {Alert, Box, Snackbar} from "@mui/material"
-import {Style} from "../types/PlaylistData.ts";
-import {green, indigo, orange, red} from "@mui/material/colors";
+import {Alert, Snackbar} from "@mui/material"
+import {Style} from "../types/PlaylistData.ts"
 
 type SnackbarData = {
     snackbar: ReactNode
     showSnackbar: (messageId: string, type: MessageType) => void
+    updateOptions: (ops: MessageType[]) => void
+    options: MessageType[]
 }
 
 type SnackbarProps = {
     children: ReactNode
 }
 
-type MessageType = "error" | "success" | "info" | "warning"
+const defaultOptions: MessageType[] = ["error", "success", "info", "warning"]
+const defaultSavedOptions= JSON.stringify(defaultOptions)
+
+export type MessageType = "error" | "success" | "info" | "warning"
 
 const SnackbarContext = createContext<SnackbarData | undefined>(undefined)
 
@@ -22,7 +26,16 @@ export function SnackbarProvider({children}: SnackbarProps) {
     const [severity, setSeverity] = useState<MessageType>("success")
     const [message, setMessage] = useState("")
 
+    const storedOptions: MessageType[] = JSON.parse(localStorage.getItem("snackbar-options") ?? defaultSavedOptions)
+    const [options, setOptions] = useState<MessageType[]>(storedOptions)
+
+    function updateOptions(ops: MessageType[]) {
+        setOptions(ops)
+        localStorage.setItem("snackbar-options", JSON.stringify(ops))
+    }
+
     const showSnackbar = (message: string, type: MessageType) => {
+        if (!options.find(option => option === type)) return
         setMessage(message)
         setSeverity(type)
         setOpen(false)
@@ -33,17 +46,6 @@ export function SnackbarProvider({children}: SnackbarProps) {
     const handleClose = (_: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === "clickaway") return
         setOpen(false)
-    }
-
-    let color
-    switch (severity) {
-        case "success": color = green[900]
-            break
-        case "warning": color = orange[900]
-            break
-        case "error": color = red[900]
-            break
-        case "info": color = indigo[900]
     }
 
     const snackbarStyle : Style = {
@@ -57,7 +59,9 @@ export function SnackbarProvider({children}: SnackbarProps) {
             open={open}
             onClose={handleClose}
             autoHideDuration={1200}>
-            <Alert severity={severity}
+            <Alert
+                variant="filled"
+                severity={severity}
                sx={{
                    "& .MuiAlert-icon": {
                        color: "white"
@@ -65,7 +69,8 @@ export function SnackbarProvider({children}: SnackbarProps) {
                    fontSize: "25px",
                    display: "flex",
                    alignItems: "center",
-                   backgroundColor: color
+                   color: "text.primary",
+                   backgroundColor: `${severity}`
                }}>
                 {message}
             </Alert>
@@ -73,7 +78,13 @@ export function SnackbarProvider({children}: SnackbarProps) {
     )
 
     return (
-        <SnackbarContext.Provider value={{snackbar, showSnackbar}}>
+        <SnackbarContext.Provider
+            value={{
+                snackbar,
+                showSnackbar,
+                updateOptions,
+                options
+            }}>
             {children}
         </SnackbarContext.Provider>
     )

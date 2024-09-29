@@ -49,7 +49,8 @@ const buttonStyle: Style = {
     cursor: "pointer",
     paddingRight: "0.25rem",
     borderRadius: "3px",
+    transition: "background-color 100ms linear",
     ":hover" : {
-        backgroundColor: "#ffffff20"
+        backgroundColor: "primary.light"
     }
 }

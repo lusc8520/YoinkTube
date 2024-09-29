@@ -25,7 +25,7 @@ export function PopperMenu({anchor, isOpen, handleClose, children} : PopperMenuP
 }
 
 const menuListStyle: Style = {
-    background: "#282828",
+    backgroundColor: "background.paper",
     borderRadius: "5px",
     padding: "0.3rem"
 }

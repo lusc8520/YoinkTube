@@ -1,20 +1,24 @@
 import React, {useRef, useState} from "react"
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import {PopperMenu} from "../../general/PopperMenu.tsx"
-import {Box, IconButton, Input, MenuItem} from "@mui/material"
+import {MenuItem} from "@mui/material"
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever"
-import {Style} from "../../../types/PlaylistData.ts"
+import {RemotePlaylist, Style} from "../../../types/PlaylistData.ts"
 import {VideoDto} from "@yoinktube/contract"
 import EditIcon from "@mui/icons-material/Edit"
-import CheckIcon from "@mui/icons-material/Check"
-import CloseIcon from "@mui/icons-material/Close"
-import {useDeleteVideo, useEditVideo} from "../../../hooks/playlist/RemotePlaylists.ts"
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded"
+import {useCopyLink, useOpenLink} from "../../../hooks/playlist/LocalPlaylists.ts"
+import LaunchIcon from '@mui/icons-material/Launch'
+import {useDialog} from "../../../context/DialogProvider.tsx";
+import {DeleteVideoDialog, EditVideoDialog} from "./VideoDialog.tsx";
 
-export function VideoMenu({video} : {video: VideoDto}) {
+export function VideoMenu({video, playlist} : {video: VideoDto, playlist: RemotePlaylist}) {
 
     const anchor = useRef<null | SVGSVGElement>(null)
     const [isOpen, setOpen] = useState(false)
-    const [showEdit, setShowEdit] = useState(false)
+    const copyLink = useCopyLink()
+    const openLink = useOpenLink()
+    const {hideDialog, showDialog} = useDialog()
 
     const handleToggle = () => {
         setOpen(!isOpen)
@@ -24,65 +28,41 @@ export function VideoMenu({video} : {video: VideoDto}) {
         setOpen(false)
     }
 
-    const {mutate: deleteVideo} = useDeleteVideo()
-    const {mutate: editVideo}  = useEditVideo()
-
-    const [name, setName] = useState(video.name)
-
-    const confirmEdit = () => {
-        if (video.name !== name) editVideo({id: video.id, title: name})
-        setShowEdit(false)
-        setOpen(false)
-    }
-
-    if (showEdit) {
-        return <Box
-            sx={{ display: "flex", gap: "1rem" }}>
-            <Input
-                value={name}
-                placeholder="Name..."
-                onChange={event => {
-                    setName(event.target.value)
-                }}
-                onKeyDown={event => {
-                    if (event.key === "Enter") {
-                        confirmEdit()
-                    }
-                }}
-            />
-            <IconButton
-                color="success"
-                onClick={_ => {
-                    confirmEdit()
-                }}>
-                <CheckIcon/>
-            </IconButton>
-
-            <IconButton
-                onClick={_ => {
-                    setName(video.name)
-                    setShowEdit(false)
-                    setOpen(false)
-                }}
-                color="error">
-                <CloseIcon/>
-            </IconButton>
-        </Box>
-    }
-
     return (
         <>
             <MoreVertIcon ref={anchor} onClick={handleToggle} sx={menuIconStyle}/>
             <PopperMenu handleClose={close} anchor={anchor.current} isOpen={isOpen}>
                 <MenuItem
-                    onClick={() => deleteVideo(video.id)}
+                    onClick={() => {
+                        setOpen(false)
+                        showDialog({
+                            title: "Delete Video",
+                            node: <DeleteVideoDialog playlist={playlist} video={video} onSuccess={hideDialog} onCancel={hideDialog}/>
+                        })
+                    }}
                     sx={menuItemStyle}>
                     <DeleteForeverIcon/>Delete Video
                 </MenuItem>
                 <MenuItem
-                    onClick={() => setShowEdit(true)}
+                    onClick={() => {
+                        setOpen(false)
+                        showDialog({
+                            title: "Edit Video",
+                            node: <EditVideoDialog playlist={playlist} onSuccess={hideDialog} onCancel={hideDialog} video={video}/>
+                        })
+                    }}
                     sx={menuItemStyle}>
                     <EditIcon/>Edit Video
+                </MenuItem>
+                <MenuItem
+                    onClick={() => copyLink(video)}
+                    sx={menuItemStyle}>
+                    <ContentCopyRoundedIcon/>Copy Youtube Link
+                </MenuItem>
+                <MenuItem
+                    onClick={() => openLink(video)}
+                    sx={menuItemStyle}>
+                    <LaunchIcon/>View on Youtube
                 </MenuItem>
             </PopperMenu>
         </>
@@ -92,7 +72,7 @@ export function VideoMenu({video} : {video: VideoDto}) {
 const menuIconStyle: Style = {
     color : "grey",
     ":hover": {
-        color: "white"
+        color: "text.primary"
     },
     cursor: "pointer",
     transition: "0.25s",
@@ -106,6 +86,6 @@ const menuItemStyle: Style = {
     gap: "0.5rem",
     borderRadius: "5px",
     ":hover": {
-        background: "#535353"
+        background: "primary.dark"
     }
 }

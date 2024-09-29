@@ -1,7 +1,9 @@
 import {Box} from "@mui/material"
-import {ReactNode} from "react";
-import {Style} from "../../types/PlaylistData.ts";
-import {useSnackbar} from "../../context/SnackbarProvider.tsx";
+import React, {ReactNode} from "react"
+import {Style} from "../../types/PlaylistData.ts"
+import {useSnackbar} from "../../context/SnackbarProvider.tsx"
+import {useScroll} from "../../context/ScrollProvider.tsx"
+import {useDialog} from "../../context/DialogProvider.tsx";
 
 type MainContentProps = {
     children: ReactNode
@@ -9,9 +11,15 @@ type MainContentProps = {
 
 export function MainContent({children} : MainContentProps) {
     const {snackbar} = useSnackbar()
+    const {onScroll, scrollElementRef} = useScroll()
+    const {dialog} = useDialog()
+
     return (
         <Box id="container-for-snackbar" sx={snackbarContainerStyle}>
             <Box component="main"
+                 id="scroll"
+                 onScroll={onScroll}
+                ref={scrollElementRef}
                 sx={mainContainerStyle}>
                 <Box component="main"
                     sx={mainContainerStyle2}>
@@ -19,6 +27,7 @@ export function MainContent({children} : MainContentProps) {
                 </Box>
             </Box>
             {snackbar}
+            {dialog}
         </Box>
     )
 }

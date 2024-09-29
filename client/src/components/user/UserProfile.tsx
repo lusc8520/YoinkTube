@@ -1,8 +1,7 @@
 import {Box, Button, Tab, Tabs} from "@mui/material";
 import LogoutIcon from '@mui/icons-material/Logout';
 import {useNavigate, useParams} from "react-router-dom";
-import {red} from '@mui/material/colors';
-import {useAuth} from "../../context/AuthProvider.tsx";
+import {useAuth, useLogout} from "../../context/AuthProvider.tsx";
 import {Style} from "../../types/PlaylistData.ts";
 import {useUser} from "../../hooks/user/User.ts";
 import React, {useState} from "react";
@@ -17,8 +16,9 @@ export function UserProfile() {
 
     const {id} = useParams()
     const {data: user, error, isFetching} = useUser(parseInt(id ?? ""))
-    const {logout, user: authUser} = useAuth()
+    const {user: authUser} = useAuth()
     const navigate = useNavigate()
+    const logout = useLogout()
 
     const [tabIndex, setTabIndex] = useState(0)
 
@@ -44,7 +44,9 @@ export function UserProfile() {
                 component="header">
                 <Box sx={userTitleStyle}>
                     <Box sx={usernameStyle}>{user.username}</Box>
-                    <Box sx={userRoleStyle}>role: {user.role}</Box>
+                    <Box sx={userRoleStyle}>Role: {user.role}</Box>
+                    <Box sx={userRoleStyle}>Playlists: {user.playlistCount}</Box>
+                    <Box sx={userRoleStyle}>Videos: {user.videoCount}</Box>
                 </Box>
                 <Tabs onChange={handleTabChange}
                       variant="fullWidth"
@@ -52,14 +54,17 @@ export function UserProfile() {
                       TabIndicatorProps={{ style: { backgroundColor: "white" } }}>
                     <Tab disableRipple sx={tabStyle} label="Me"/>
                     <Tab disableRipple sx={tabStyle} label="Playlists"/>
-                    {user.role === "ADMIN" && <Tab disableRipple sx={tabStyle} label="Admin"/>}
-
+                    {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") &&
+                        <Tab disableRipple sx={tabStyle} label="Admin"/>
+                    }
                 </Tabs>
             </Box>
             <Box sx={tabContentStyle}>
                 <TabContent hidden={tabIndex !== 0}
                             sx={{display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem"}}>
-                    <Button sx={logoutButtonStyle}
+                    <Button
+                        variant= "cancelButton"
+                        sx={logoutButtonStyle}
                             startIcon={<LogoutIcon/>}
                             onClick={() => {
                                 logout()
@@ -117,19 +122,16 @@ const logoutButtonStyle: Style = {
     textTransform: "none",
     fontSize: "large" ,
     color: "white",
-    backgroundColor: red["900"],
-    ":hover": {
-        backgroundColor: red["A700"],
-    }
 }
 
-const tabStyle: Style = {
+export const tabStyle: Style = {
     ":hover": {
-        color: "white",
-        backgroundColor: "#ffffff15"
+        color: "text.primary",
+        backgroundColor: "primary.main"
     },
     "&.Mui-selected": {
-        color: "white"
+        color: "text.primary",
+        fontWeight: "bold",
     },
     textTransform: "none",
     fontSize: "20px",

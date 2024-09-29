@@ -16,21 +16,30 @@
     "@fontsource/roboto": "^5.0.12",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
-    "@tanstack/react-query": "^5.49.2",
+    "@tanstack/react-query": "^5.50.1",
+    "@types/dom-speech-recognition": "^0.0.4",
     "@yoinktube/contract": "^1.0.0",
     "dexie": "^4.0.7",
+    "framer-motion": "^11.5.4",
     "normalize.css": "^8.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-intersection-observer": "^9.13.0",
+    "react-qr-code": "^2.0.15",
     "react-router-dom": "^6.22.3",
+    "react-speech-recognition": "^3.10.0",
     "react-youtube": "^10.1.0",
-    "zustand": "^4.5.4"
+    "recharts": "^2.12.7",
+    "zustand": "^4.5.5",
+    "regenerator-runtime": "^0.14.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/react-speech-recognition": "^3.9.5",
     "@types/youtube": "^0.0.50",
     "@vitejs/plugin-react": "^4.2.1",
+    "framer-motion": "^11.5.4",
     "vite": "^5.2.0"
   }
 }

@@ -1,72 +1,74 @@
-import {PlaylistDto, VideoDto} from "@yoinktube/contract";
+import {VideoDto} from "@yoinktube/contract";
 import {Box} from "@mui/material";
 import React from "react";
-import {Style} from "../../../types/PlaylistData.ts";
+import {LocalPlaylist, Style} from "../../../types/PlaylistData.ts";
 import {LocalVideoMenu} from "./LocalVideoMenu.tsx";
-import {usePlayer} from "../../../hooks/playlist/PlayerStore.ts";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
+import {thumbnailContainerStyle, thumbnailStyle} from "./LocalVideoItem.tsx";
+import { motion } from "framer-motion";
+import {useWatchTogether} from "../../../context/WatchTogetherProvider.tsx";
+import {useSnackbar} from "../../../context/SnackbarProvider.tsx";
+import {playlistNameStyle} from "../remote/PlaylistItem.tsx";
 
 type Props = {
     video: VideoDto
-    playlist: PlaylistDto
+    playlist: LocalPlaylist
     index: number
 }
 
 export function LocalExtendedVideoItem({video, index, playlist} : Props) {
-
-    const currentVideo = usePlayer((state) => state.currentVideo)
-    const playPlaylist = usePlayer((state) => state.playPlaylist)
-
+    const {currentVideo, playPlaylist} = usePlayer()
+    const {isAllowed} = useWatchTogether()
+    const {showSnackbar} = useSnackbar()
     return (
-        <Box
-            id="video-item"
-            sx={videoItemStyle(currentVideo?.id === video.id)}>
-            <PlayArrowIcon onClick={() => {
-                playPlaylist(playlist, index)
-            }}/>
+        <motion.div
+            layout
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}>
             <Box
-                id="thumbnail-container"
-                sx={thumbnailContainerStyle}>
+                id="video-item"
+                sx={extendedVideoItemStyle(currentVideo?.id === video.id)}>
+                <span>{video.index}</span>
+                <PlayArrowIcon onClick={() => {
+                    if (!isAllowed) {
+                        showSnackbar("you are not the lobby owner", "error")
+                        return
+                    }
+                    playPlaylist(playlist, index)
+                }}/>
                 <Box
-                    sx={thumbnailStyle}
-                    component="img"
-                    src={`https://img.youtube.com/vi/${video.videoId}/sddefault.jpg`}
-                />
+                    id="thumbnail-container"
+                    sx={thumbnailContainerStyle}>
+                    <Box
+                        sx={thumbnailStyle}
+                        component="img"
+                        src={`https://img.youtube.com/vi/${video.videoId}/sddefault.jpg`}
+                    />
+                </Box>
+                <Box
+                    sx={playlistNameStyle}
+                    id="video-title">
+                    {video.name}
+                </Box>
+                <Box id="spacing" sx={{flexGrow: 1}}/>
+                <LocalVideoMenu video={video} playlist={playlist}/>
             </Box>
-
-            <Box
-                id="video-title">
-                {video.name}
-            </Box>
-            <Box id="spacing" sx={{flexGrow: 1}}/>
-
-            <LocalVideoMenu video={video}/>
-        </Box>
+        </motion.div>
     )
 }
 
-const videoItemStyle = (isCurrent: boolean): Style => ({
+export const extendedVideoItemStyle = (isCurrent: boolean): Style => ({
     display: "flex",
     borderRadius: "5px",
     alignItems: "center",
-    padding: "0.25rem",
+    padding: "1rem",
     gap: "0.25rem",
     transition: "0.1s",
     ":hover": {
-        backgroundColor : "#272727"
+        backgroundColor : "secondary.main"
     },
     cursor: "pointer",
-    backgroundColor: isCurrent? "#112531": ""
+    backgroundColor: isCurrent? "secondary.dark": ""
 })
-
-const thumbnailContainerStyle: Style = {
-    width: "120px",
-    height: "70px"
-}
-
-const thumbnailStyle: Style = {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    borderRadius: "5px",
-}

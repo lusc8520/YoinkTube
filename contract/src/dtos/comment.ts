@@ -11,5 +11,5 @@ export type CommentDto = {
 export type CommentCreationRequest = {
     playlistId: number
     text: string
-    parentId: number
+    parentId?: number
 }

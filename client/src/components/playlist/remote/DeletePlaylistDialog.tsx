@@ -1,36 +1,49 @@
-import {Box, IconButton} from "@mui/material"
-import CheckIcon from "@mui/icons-material/Check"
-import CloseIcon from "@mui/icons-material/Close"
+import {Box, Button} from "@mui/material"
 import React, {useEffect} from "react"
 import {useNavigate} from "react-router-dom"
-import {usePlaylistContext} from "../../../context/PlaylistProvider.tsx"
 import {useDeletePlaylist} from "../../../hooks/playlist/RemotePlaylists.ts"
+import {RemotePlaylist} from "../../../types/PlaylistData.ts";
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
 
 type Props = {
-    onCancel: () => void
+    onCancel?: () => void
+    playlist: RemotePlaylist
+    onSuccess?: () => void
 }
 
-export function DeletePlaylistDialog({onCancel} : Props) {
-
+export function DeletePlaylistDialog({onCancel, playlist, onSuccess} : Props) {
     const navigate = useNavigate()
-    const {playlist} = usePlaylistContext()
+    const {removePlaylist} = usePlayer()
+
     const {mutate: deletePlaylist,error, isSuccess} = useDeletePlaylist()
 
     useEffect(() => {
-        if (isSuccess) navigate("/")
+        if (isSuccess) {
+            removePlaylist(playlist)
+            navigate("/")
+            onSuccess?.()
+        }
     }, [isSuccess])
 
     return (
-        <Box sx={{display: "flex", gap: "0.5rem", alignItems: "center"}}>
+        <Box display="flex" flexDirection="column" alignItems="center" gap="0.5rem">
             <Box>Playlist will be deleted permanently</Box>
-            <IconButton onClick={_ => deletePlaylist(playlist.id)}
-                        color="success">
-                <CheckIcon/>
-            </IconButton>
-            <IconButton onClick={_ => onCancel()}
-                        color="error">
-                <CloseIcon/>
-            </IconButton>
+            <Box display="flex" gap="0.5rem">
+                <Button
+                    sx={{textTransform: "none"}}
+                    variant="acceptButton"
+                    onClick={() => deletePlaylist(playlist.id)}
+                    color="error">
+                    Delete
+                </Button>
+                <Button
+                    sx={{textTransform: "none"}}
+                    variant="cancelButton"
+                    onClick={onCancel}
+                    color="info">
+                    Cancel
+                </Button>
+            </Box>
         </Box>
     )
 }

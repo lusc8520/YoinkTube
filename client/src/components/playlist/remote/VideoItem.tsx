@@ -1,28 +1,38 @@
-import {PlaylistDto, VideoDto} from "@yoinktube/contract"
+import {VideoDto} from "@yoinktube/contract"
 import {Box} from "@mui/material"
 import React from "react"
-import {Style} from "../../../types/PlaylistData.ts"
-import {usePlayer} from "../../../hooks/playlist/PlayerStore.ts";
+import {Playlist, RemotePlaylist} from "../../../types/PlaylistData.ts"
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
+import {thumbnailContainerStyle, thumbnailStyle, videoNameStyle} from "../local/LocalVideoItem.tsx";
+import {useLayout} from "../../../context/LayoutProvider.tsx";
+import {useWatchTogether} from "../../../context/WatchTogetherProvider.tsx";
+import {useSnackbar} from "../../../context/SnackbarProvider.tsx";
 
 type Props = {
     video: VideoDto
-    playlist: PlaylistDto
+    playlist: RemotePlaylist
     index: number
 }
 
-export function VideoItem({video, playlist, index} : Props) {
 
-    const currentVideo = usePlayer((state) => state.currentVideo)
-    const playPlaylist = usePlayer((state) => state.playPlaylist)
+export function VideoItem({video, playlist, index} : Props) {
+    const {currentVideo, playPlaylist, currentPlaylist} = usePlayer()
+    const isCurrent = currentVideo?.id === video.id && Playlist.equals(currentPlaylist, playlist)
+    const {videoItemStyle, layoutType} = useLayout()
+    const {isAllowed} = useWatchTogether()
+    const {showSnackbar} = useSnackbar()
+
     return (
         <Box
             onClick={() => {
-                playPlaylist(playlist, index)
-            }}
-            id="video-item"
-            sx={videoItemStyle(currentVideo?.id === video.id)}>
+                if (!isAllowed) {
+                    showSnackbar("you are not the lobby owner", "error")
+                    return
+                }
+                playPlaylist(playlist, index)}
+            }
+            sx={videoItemStyle(isCurrent)}>
             <Box
-                id="thumbnail-container"
                 sx={thumbnailContainerStyle}>
                 <Box
                     sx={thumbnailStyle}
@@ -32,35 +42,10 @@ export function VideoItem({video, playlist, index} : Props) {
             </Box>
 
             <Box
-                id="video-title">
+                sx={videoNameStyle(layoutType)}>
                 {video.name}
             </Box>
-            <Box id="spacing" sx={{flexGrow: 1}}/>
+            {/*<Box id="spacing" sx={{flexGrow: 1}}/>*/}
         </Box>
     )
-}
-
-const videoItemStyle = (isCurrent: boolean): Style => ({
-    display: "flex",
-    alignItems: "center",
-    padding: "0.25rem",
-    gap: "0.25rem",
-    transition: "0.1s",
-    ":hover": {
-        backgroundColor : "#272727"
-    },
-    cursor: "pointer",
-    backgroundColor: isCurrent? "#112531": ""
-})
-
-const thumbnailContainerStyle: Style = {
-    width: "120px",
-    height: "70px"
-}
-
-const thumbnailStyle: Style = {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    borderRadius: "5px",
 }

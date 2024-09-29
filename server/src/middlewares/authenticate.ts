@@ -1,7 +1,8 @@
 import {Request, Response, NextFunction} from "express"
 import * as jwt from "jsonwebtoken"
-import {JWT_SECRET} from "../env"
+import {JWT_SECRET} from "../env/env"
 import {prismaClient} from "../index"
+import {JwtPayload} from "jsonwebtoken";
 
 
 const authenticate = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,7 +19,7 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
             console.log(error.name)
             if (error.name === "TokenExpiredError") {
                 const payload = jwt.verify(token, JWT_SECRET, {ignoreExpiration: true})
-                const newToken = jwt.sign({ userId: (payload as any).userId }, JWT_SECRET, {expiresIn: "1h"});
+                const newToken = jwt.sign({ userId: (payload as JwtPayload).userId }, JWT_SECRET, {expiresIn: "1h"});
                 return res.status(401).json(newToken)
             } else {
                 return res.status(401).json("Invalid Token")

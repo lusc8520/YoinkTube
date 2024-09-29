@@ -1,8 +1,12 @@
 
+export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+
 export type UserDto = {
     id: number
     username: string
     role: string
+    playlistCount: number
+    videoCount: number
 }
 
 export type LoginRequest = {
@@ -30,5 +34,5 @@ export type UpdateUserRequest = {
 
 export type ChangeUserRoleRequest = {
     id: number
-    role: string
+    role: UserRole
 }

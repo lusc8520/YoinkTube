@@ -5,19 +5,12 @@ import authenticate from "../middlewares/authenticate"
 const authRoutes:Router = Router()
 
 authRoutes.post('/signup', signup)
-
 authRoutes.post('/login', login)
-
 authRoutes.get('/tokenLogin', authenticate, tokenLogin)
-
+authRoutes.put('/role', authenticate, changeUserRole)
 authRoutes.put('/', authenticate, updateUser)
-
 authRoutes.delete('/:id', authenticate, deleteUser)
-
-authRoutes.get('/:id', getUserById)
-
 authRoutes.get('/', authenticate, listUsers)
-
-authRoutes.put('/:id/role', authenticate, changeUserRole)
+authRoutes.get('/:id', getUserById)
 
 export default authRoutes

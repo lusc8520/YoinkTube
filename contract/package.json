@@ -5,6 +5,8 @@
   "type": "module",
   "main": "build/index.js",
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsx src/build.ts && tsc --build"
   }
 }
+
+

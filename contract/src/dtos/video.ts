@@ -3,6 +3,7 @@ export type VideoDto = {
     id: number
     name: string
     videoId: string
+    index: number
 }
 
 export type VideoCreationRequest = {

@@ -1,29 +1,33 @@
 import {Box} from "@mui/material"
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt'
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt'
-
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt'
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt'
-import {Style} from "../../../types/PlaylistData.ts";
-import {useEffect, useState} from "react";
-import {useCheckReaction} from "../../../hooks/playlist/Favorites.ts";
-import {usePlaylistContext} from "../../../context/PlaylistProvider.tsx";
+import {Style} from "../../../types/PlaylistData.ts"
+import {useDeleteReaction, useGetReaction, usePostReaction, useReactionCounts} from "../../../hooks/playlist/reaction.ts"
 
-export function LikeDisplay() {
+export function LikeDisplay({playlistId} : {playlistId: number}) {
 
-    const [state, setState] = useState<"like"|"dislike"|undefined>(undefined)
+    const {data: reactionState} = useGetReaction(playlistId)
+    const {mutate: postReaction} = usePostReaction()
+    const {mutate: deleteReaction} = useDeleteReaction()
+    const {data: reactionCounts} = useReactionCounts(playlistId)
 
-    const {playlist} = usePlaylistContext()
-
-    const {data: reactionState, error, isSuccess} = useCheckReaction(playlist.id)
-
-    if (reactionState === undefined) return null
 
     const toggleLike = () => {
-        setState((state === "like")? undefined : "like")
+        if (reactionState === "like") {
+            deleteReaction(playlistId);
+        } else {
+            postReaction({ state: "like", id: playlistId });
+        }
     }
+
     const toggleDislike = () => {
-        setState((state === "dislike")? undefined : "dislike")
+        if (reactionState === "dislike") {
+            deleteReaction(playlistId);
+        } else {
+            postReaction({ state: "dislike", id: playlistId});
+        }
     }
 
     return (
@@ -32,59 +36,53 @@ export function LikeDisplay() {
                 onClick={toggleLike}
                 sx={likeWrapperStyle}>
                 {
-                    (state === "like")?
-                    <ThumbUpAltIcon sx={iconStyle}/>
-                    :
-                    <ThumbUpOffAltIcon sx={iconStyle}/>
+                    (reactionState === "like") ?
+                        <ThumbUpAltIcon sx={iconStyle} /> :
+                        <ThumbUpOffAltIcon sx={iconStyle} />
                 }
-                <Box sx={textStyle}>1000</Box>
+                <Box>{reactionCounts?.likeCount}</Box>
             </Box>
             <Box
                 onClick={toggleDislike}
                 sx={dislikeWrapperStyle}>
                 {
-                    (state === "dislike")?
-                        <ThumbDownAltIcon sx={iconStyle}/>
-                        :
-                        <ThumbDownOffAltIcon sx={iconStyle}/>
+                    (reactionState === "dislike") ?
+                        <ThumbDownAltIcon sx={iconStyle} /> :
+                        <ThumbDownOffAltIcon sx={iconStyle} />
                 }
-                <Box sx={textStyle}>1000</Box>
+                <Box>{reactionCounts?.dislikeCount}</Box>
             </Box>
         </Box>
-    )
+    );
 }
 
 const wrapperStyle: Style = {
     display: "flex",
+    flexDirection: "column",
     borderRadius: "1.25em",
-    backgroundColor: "#272727",
     overflow: "hidden"
-}
-
-const textStyle: Style = {
-
-}
+};
 
 const likeWrapperStyle: Style = {
-    display:"flex",
+    display: "flex",
     alignItems: "center",
     ":hover": {
-        backgroundColor: "#3f3f3f",
         cursor: "pointer"
     },
     padding: "0.5em",
     gap: "0.25rem"
-}
+};
+
 const dislikeWrapperStyle: Style = {
-    display:"flex",
+    display: "flex",
     alignItems: "center",
     ":hover": {
-        backgroundColor: "#3f3f3f",
         cursor: "pointer"
     },
     padding: "0.5em",
     gap: "0.25rem"
-}
+};
+
 const iconStyle: Style = {
     color: "white"
-}
+};

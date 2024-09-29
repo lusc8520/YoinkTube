@@ -1,59 +1,50 @@
-import {Box, IconButton, Input} from "@mui/material"
-import CheckIcon from "@mui/icons-material/Check"
-import CloseIcon from "@mui/icons-material/Close"
-import React, {useEffect, useState} from "react"
-import {usePlaylistContext} from "../../../context/PlaylistProvider.tsx"
-import {useEditPlaylist} from "../../../hooks/playlist/RemotePlaylists.ts"
+import React, { useEffect, useState } from "react";
+import {useEditPlaylist, useTags} from "../../../hooks/playlist/RemotePlaylists.ts";
+import { PlaylistFormDialog } from "./PlaylistFormDialog";
+import {TagDto} from "@yoinktube/contract";
+import {RemotePlaylist} from "../../../types/PlaylistData.ts";
+import {usePlayer} from "../../../context/PlayerProvider.tsx";
 
 type Props = {
     onCancel: () => void
+    playlist: RemotePlaylist
+    onSuccess?: () => void
 }
 
-export function EditPlaylistDialog({onCancel} : Props) {
+export function EditPlaylistDialog({ onCancel, playlist, onSuccess }: Props) {
 
-    const {playlist} = usePlaylistContext()
 
     const [name, setName] = useState(playlist.name)
-    const {mutate: edit, isSuccess} = useEditPlaylist()
+    const [isPublic, setIsPublic] = useState(playlist.isPublic)
+    const { mutate: edit, isSuccess } = useEditPlaylist()
+    const [tags, setTags] = useState<TagDto[]>(playlist.tags || [])
+    const { data: availableTags, isLoading: isLoadingTags } = useTags()
+    const {editPlaylist} = usePlayer()
 
     useEffect(() => {
-        if (isSuccess) onCancel()
-    }, [isSuccess]);
+        if (isSuccess) {
+            editPlaylist({...playlist, name: name})
+            onSuccess?.()
+        }
+    }, [isSuccess])
 
     function confirm() {
-        edit({id: playlist.id, title: name})
+        edit({ id: playlist.id, title: name, isPublic, tags: tags })
     }
 
     return (
-        <Box
-            sx={{ display: "flex", gap: "1rem" }}>
-            <Input
-                value={name}
-                placeholder="Name..."
-                onChange={event => {
-                    setName(event.target.value)
-                }}
-                onKeyDown={event => {
-                    if (event.key === "Enter") {
-                        confirm()
-                    }
-                }}
-            />
-            <IconButton
-                color="success"
-                onClick={_ => {
-                    confirm()
-                }}>
-                <CheckIcon/>
-            </IconButton>
-
-            <IconButton
-                onClick={_ => {
-                    onCancel()
-                }}
-                color="error">
-                <CloseIcon/>
-            </IconButton>
-        </Box>
+        <PlaylistFormDialog
+            name={name}
+            isPublic={isPublic}
+            onNameChange={(event) => setName(event.target.value)}
+            onPublicChange={() => setIsPublic(!isPublic)}
+            onCancel={onCancel}
+            onConfirm={confirm}
+            confirmText="Save"
+            tags={tags}
+            onTagsChange={setTags}
+            availableTags={availableTags || []}
+            isLoadingTags={isLoadingTags}
+        />
     )
 }

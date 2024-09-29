@@ -1,19 +1,24 @@
 import {SxProps, Theme} from "@mui/material"
-import {PlaylistDto, VideoDto} from "@yoinktube/contract";
+import {PlaylistDto} from "@yoinktube/contract";
+import {CSSProperties} from "react";
 
 export type Style = SxProps<Theme>
+export type CSSStyle = CSSProperties
 
-export type LocalPlaylist = {
-    isLocal: false,
-    id: number
-    name: string
-    videos: VideoDto[]
-}
+export const createCss = (style: CSSStyle) => style
+export const createMuiStyle = (style: Style) => style
 
-export type RemotePlaylist = PlaylistDto & { isLocal: true }
+export type RemotePlaylist = PlaylistDto & { isLocal: false }
+export type LocalPlaylist = PlaylistDto & { isLocal: true }
 
 export type Playlist = RemotePlaylist | LocalPlaylist
 
-export function equals(p1: Playlist, p2:Playlist) {
-    return (p1.isLocal === p2.isLocal && p1.id === p2.id);
+
+
+export const Playlist = {
+
+    equals: (p1?: Playlist, p2?:Playlist) => {
+        if (p1 === undefined || p2 === undefined) return false
+        return (p1.isLocal === p2.isLocal && p1.id === p2.id)
+    }
 }

@@ -1,8 +1,8 @@
-import { prismaClient } from '../index'
-import axios from 'axios'
-import { YOUTUBE_API_KEY } from '../env'
+import {prismaClient} from '../index'
+import {YOUTUBE_API_KEY} from '../env/env'
 import {extractVideoId, VideoDto} from "@yoinktube/contract"
-import {Video} from "@prisma/client"
+import {Video} from "@prisma/client";
+import {maxVideo} from "./playlistService";
 
 
 export function videoToDto(video: Video): VideoDto {
@@ -10,26 +10,61 @@ export function videoToDto(video: Video): VideoDto {
         id: video.id,
         name: video.title,
         videoId: video.youtubeVideoId,
+        index: video.index
     }
 }
 
 export const addVideoService = async (playlistId: number, title: string, link: string): Promise<[VideoDto | string, number]> => {
     const videoId = await getYouTubeVideoId(link);
 
-
     if (videoId === null) {
-        return ["BadLink", 400]
+        return ["Invalid or non-existent YouTube video URL", 400]
     }
 
-    const video = await prismaClient.video.create({
-        data: {
-            title: title,
-            youtubeVideoId: videoId,
-            playlistId: playlistId,
-        },
-    })
+    if(title === ""){
+        const videoTitle = await getYouTubeVideoDetails(videoId);
+        if (!videoTitle) {
+            return ["Failed to fetch video details", 400];
+        }
+        title = videoTitle;
+    }
 
-    return [videoToDto(video), 200]
+    const playlist = await prismaClient.playlist.findUnique({
+        where: { id: playlistId }
+    });
+
+    if (!playlist) {
+        return ["Playlist not found", 404];
+    }
+
+    if (playlist.videoCount >= maxVideo) {
+        return [`Maximum video limit reached for this playlist(${maxVideo})`, 403];
+    }
+
+    const video = await prismaClient.$transaction(async (prisma) => {
+        const newVideo = await prisma.video.create({
+            data: {
+                title: title,
+                youtubeVideoId: videoId,
+                playlistId: playlistId,
+                index: playlist.videoCount + 1,
+            },
+        });
+
+        await prisma.playlist.update({
+            where: { id: playlistId },
+            data: { videoCount: { increment: 1 } }
+        });
+
+        await prisma.user.update({
+            where: { id: playlist.userId },
+            data: { videoCount: { increment: 1 } }
+        });
+
+        return newVideo;
+    });
+
+    return [videoToDto(video), 200];
 }
 
 export const updateVideoService = async (videoId: number, title: string): Promise<[VideoDto, number]> => {
@@ -41,15 +76,42 @@ export const updateVideoService = async (videoId: number, title: string): Promis
 }
 
 export const deleteVideoService = async (videoId: number): Promise<number> => {
-    if (videoId === undefined) return 400
+    if (videoId === undefined) return 400;
 
-    const deletedVideo = await prismaClient.video.delete({
-        where: {
-            id: videoId
-        }
-    })
+    return await prismaClient.$transaction(async (prisma) => {
+        const videoToDelete = await prisma.video.findUnique({
+            where: {id: videoId},
+            include: {playlist: true}
+        });
 
-    return (deletedVideo !== null)? 200 : 400
+        if (!videoToDelete) return 400;
+
+        await prisma.video.delete({
+            where: {id: videoId}
+        });
+
+        await prisma.video.updateMany({
+            where: {
+                playlistId: videoToDelete.playlistId,
+                index: {gt: videoToDelete.index}
+            },
+            data: {
+                index: {decrement: 1}
+            }
+        });
+
+        await prisma.playlist.update({
+            where: {id: videoToDelete.playlistId},
+            data: {videoCount: {decrement: 1}}
+        });
+
+        await prisma.user.update({
+            where: {id: videoToDelete.playlist.userId},
+            data: {videoCount: {decrement: 1}}
+        });
+
+        return 200;
+    });
 }
 
 export const getVideoByIdService = async (videoId: number): Promise<[VideoDto | string, number]> => {
@@ -64,25 +126,29 @@ export const getVideoByIdService = async (videoId: number): Promise<[VideoDto | 
     return [videoToDto(video), 200];
 }
 
-
-// Function to fetch the video ID from the YouTube Data API
 export const getYouTubeVideoId = async (link: string): Promise<string | null> => {
-    const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
-        params: {
-            id: extractVideoId(link),
-            key: YOUTUBE_API_KEY,
-            part: 'id',
-        },
-    }).catch(error =>{
-        console.log(error)
-        return null
-    })
+    const videoId = extractVideoId(link);
+    if(videoId === undefined) return null
+    const url = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=id`;
 
-    if (response === null) return null
-    console.log(response.data)
+    const response = await fetch(url).catch(() => null)
 
-    if (response.data.items.length > 0) {
-        return response.data.items[0].id;
+    const data = await response?.json();
+
+    if (data.items && data.items.length > 0) {
+        return data.items[0].id;
+    }
+
+    return null;
+}
+
+async function getYouTubeVideoDetails(videoId: string): Promise<string | null> {
+    const url = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.items && data.items.length > 0) {
+        return  data.items[0].snippet.title;
     }
 
     return null;

@@ -2,9 +2,8 @@ import React, {ReactNode, useState} from "react"
 import {Box, Tab, Tabs} from "@mui/material"
 import {LoginTab} from "./LoginTab.tsx"
 import {SignUpTab} from "./SignUpTab.tsx"
-import { indigo } from '@mui/material/colors';
-import {Style} from "../../types/PlaylistData.ts";
-
+import {Style} from "../../types/PlaylistData.ts"
+import {indigo} from "@mui/material/colors";
 
 export function LoginMenu() {
 
@@ -15,11 +14,10 @@ export function LoginMenu() {
             sx={{
                 display: "flex",
                 justifyContent: "center",
-                // flexGrow: 1,
-                // alignItems: "start"
             }}>
             <Box sx={{
-                    border: "#ffffff30 solid 1px",
+                    border: "solid 1px",
+                    borderColor: "divider",
                     borderRadius: "10px",
                     overflow: "hidden",
                     width: "275px"
@@ -58,7 +56,7 @@ function TabContent({hidden, children} : TabProps) {
 
 const tabStyle: Style = {
     ":hover": {
-        backgroundColor: indigo[600] + "50",
+        backgroundColor: indigo[500],
         color: "white"
     },
     "&.Mui-selected": {
@@ -70,5 +68,6 @@ const tabStyle: Style = {
     },
     textTransform: "none",
     fontSize: "larger",
-    transition: "0.2s"
+    transition: "0.2s",
+    color: "white"
 }

@@ -1,84 +1,94 @@
-import {Box, IconButton} from "@mui/material"
+import {Box, Divider, IconButton} from "@mui/material"
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PauseIcon from '@mui/icons-material/Pause'
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious'
 import SkipNextIcon from '@mui/icons-material/SkipNext'
-import React, {useState} from "react"
-import FullscreenIcon from '@mui/icons-material/Fullscreen'
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit'
-import {usePlayer} from "../../hooks/playlist/PlayerStore.ts"
+import SettingsIcon from '@mui/icons-material/Settings'
+import {useNavigate} from "react-router-dom"
+import {usePlayer} from "../../context/PlayerProvider.tsx"
+import {useWatchTogether} from "../../context/WatchTogetherProvider.tsx"
+import {useSnackbar} from "../../context/SnackbarProvider.tsx"
+import CancelPresentationIcon from '@mui/icons-material/CancelPresentation'
+import {useViewport} from "../../context/ViewportProvider.tsx"
+import ShuffleOnRoundedIcon from '@mui/icons-material/ShuffleOnRounded'
+import ShuffleRoundedIcon from '@mui/icons-material/ShuffleRounded'
+import RepeatRoundedIcon from '@mui/icons-material/RepeatRounded'
+import RepeatOnRoundedIcon from '@mui/icons-material/RepeatOnRounded'
 
 export function Footer() {
 
-    const playNext = usePlayer((state) => state.playNext)
-    const playPrevious = usePlayer((state) => state.playPrevious)
-    const play = usePlayer((state) => state.play)
-    const pause = usePlayer((state) => state.pause)
-    const isPlaying = usePlayer((state) => state.isPlaying)
+    const navigate = useNavigate()
+    const {isPlaying, playPrevious, playNext, playCurrent, pause, player, clear, shuffleOn, toggleShuffle, isLoop, toggleLoop} = usePlayer()
+    const {isAllowed} = useWatchTogether()
+    const {showSnackbar} = useSnackbar()
+    const {viewMode} = useViewport()
 
-    const [isFullscreen, setIsFullscreen] = useState(false)
+    const size = (viewMode === "horizontal")? "large" : "medium"
 
-    const playButton = () => (
-        <IconButton onMouseDown={play}>
-            <PlayArrowIcon fontSize="large"/>
-        </IconButton>
-    )
-
-    const pauseButton = () => (
-        <IconButton onMouseDown={pause}>
-            <PauseIcon fontSize="large"/>
-        </IconButton>
-    )
-
-    const enterFullscreenButton = () => (
-        <IconButton disableRipple onMouseDown={event => {
-            document.documentElement.requestFullscreen()
-            setIsFullscreen(true)
-        }}>
-            <FullscreenIcon fontSize="large"/>
-        </IconButton>
-    )
-
-    const exitFullscreenbutton = () => (
-        <IconButton disableRipple onMouseDown={event => {
-            document.exitFullscreen()
-            setIsFullscreen(false)
-        }}>
-            <FullscreenExitIcon fontSize="large"/>
-        </IconButton>
-    )
+    function check(func: () => void) {
+        if (!isAllowed) {
+            showSnackbar("you are not the lobby owner", "error")
+            return
+        }
+        func()
+    }
 
     return (
-        <Box component="footer"
-             sx={{
-                 display: "flex",
-                 padding: "0.5rem",
-                 borderTop: "#ffffff30 solid 1px"
-             }}
-        >
-            <Box sx={{
-                flexBasis: "100%"
-            }}/>
+        <>
+            <Divider/>
+            <Box component="footer" display="flex" padding="0.1rem">
+                <Box display="flex" alignItems="center" flexBasis="100%">
+                    <IconButton onMouseDown={() => navigate("/options")}>
+                        <SettingsIcon fontSize={size}/>
+                    </IconButton>
+                    {
+                        shuffleOn?
+                            <IconButton onClick={toggleShuffle}>
+                                <ShuffleOnRoundedIcon fontSize={size}/>
+                            </IconButton>
+                            :
+                            <IconButton onClick={toggleShuffle}>
+                                <ShuffleRoundedIcon fontSize={size}/>
+                            </IconButton>
+                    }
+                </Box>
 
-            <Box sx={{
-                display: "flex"
-            }}>
-                <IconButton onMouseDown={playPrevious}>
-                    <SkipPreviousIcon fontSize="large"/>
-                </IconButton>
-                { isPlaying? pauseButton() : playButton() }
-                <IconButton onMouseDown={playNext}>
-                    <SkipNextIcon fontSize="large"/>
-                </IconButton>
-            </Box>
+                <Box display="flex">
+                    <IconButton onMouseDown={() => check(playPrevious)}>
+                        <SkipPreviousIcon fontSize={size}/>
+                    </IconButton>
+                    {
+                        isPlaying?
+                            <IconButton  onMouseDown={() => check(pause)}>
+                                <PauseIcon fontSize={size}/>
+                            </IconButton>
+                            :
+                            <IconButton onMouseDown={() => check(playCurrent)}>
+                                <PlayArrowIcon fontSize={size}/>
+                            </IconButton>
+                    }
+                    <IconButton onMouseDown={() => check(playNext)}>
+                        <SkipNextIcon fontSize={size}/>
+                    </IconButton>
+                </Box>
 
-            <Box sx={{
-                flexBasis: "100%",
-                display: "flex",
-                justifyContent: "end"
-            }}>
-                {isFullscreen? exitFullscreenbutton() : enterFullscreenButton()}
+                <Box display="flex" alignItems="center" flexBasis="100%" justifyContent="flex-end">
+                    {
+                        isLoop?
+                            <IconButton onClick={toggleLoop}>
+                                <RepeatOnRoundedIcon fontSize={size}/>
+                            </IconButton>
+                            :
+                            <IconButton onClick={toggleLoop}>
+                                <RepeatRoundedIcon fontSize={size}/>
+                            </IconButton>
+                    }
+                    <IconButton color="error" onClick={() => check(clear)}>
+                        <CancelPresentationIcon fontSize={size}/>
+                    </IconButton>
+                </Box>
+
             </Box>
-        </Box>
+        </>
     )
 }

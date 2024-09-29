@@ -1,5 +1,5 @@
 import React, {MouseEventHandler, useEffect, useRef, useState} from "react"
-import {useViewport} from "../../context/ViewportProvider.tsx";
+import {useViewport} from "../context/ViewportProvider.tsx";
 
 type ResizeData = {
     width: number

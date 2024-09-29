@@ -11,33 +11,36 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  name      String
-  password  String
-  role      String     @default("USER")
-  playlists Playlist[]
-  favorites Favorite[]
-  reactions Reaction[]
-  comments  Comment[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            Int        @id @default(autoincrement())
+  name          String
+  password      String
+  role          String     @default("USER")
+  playlists     Playlist[]
+  playlistCount Int        @default(0)
+  videoCount    Int        @default(0)
+  favorites     Favorite[]
+  reactions     Reaction[]
+  comments      Comment[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@map("users")
 }
 
 model Playlist {
-  id            Int        @id @default(autoincrement())
-  title         String
-  userId        Int
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videos        Video[]
-  favorites     Favorite[]
-  reactions     Reaction[]
-  comments      Comment[]
-  likesCount    Int        @default(0)
-  dislikesCount Int        @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  title      String
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos     Video[]
+  videoCount Int        @default(0)
+  favorites  Favorite[]
+  reactions  Reaction[]
+  comments   Comment[]
+  isPublic   Boolean    @default(true)
+  tags       Tag[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@map("playlists")
 }
@@ -48,6 +51,7 @@ model Video {
   youtubeVideoId String
   playlistId     Int
   playlist       Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  index          Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -94,4 +98,14 @@ model Comment {
   updatedAt  DateTime  @updatedAt
 
   @@map("comments")
+}
+
+model Tag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  playlists Playlist[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("tags")
 }
